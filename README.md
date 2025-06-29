@@ -51,17 +51,6 @@ import axios from 'axios';
 
 ```
 
----
-
-### ✅ cURL
-
-```bash
-curl -H "Authorization: Bearer $(curl -s https://raw.githubusercontent.com/itzzzme/spotify-key/refs/heads/main/token.json)" \
-     https://api.spotify.com/v1/me
-```
-
----
-
 ## ⚠️ Disclaimer
 
 - This project is intended for **educational and personal use**.
