@@ -1,0 +1,7 @@
+{
+  "dependencies": {
+    "fs": "^0.0.1-security",
+    "puppeteer-core": "^24.11.1"
+  },
+  "type": "module"
+}
