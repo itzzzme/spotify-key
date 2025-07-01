@@ -2,16 +2,15 @@ import puppeteer from 'puppeteer-core';
 import fs from 'fs/promises';
 
 const CHROME_PATH = process.env.CHROME_BIN;
-
-// List of SP_DC values to cycle through
 const SP_DC_COOKIES = process.env.SP_DC?.split(',') || [];
-
 const tokenApiPattern = 'https://open.spotify.com/api/token';
 const accessTokens = [];
 
 const getAccessToken = async (sp_dc_value) => {
+  let browser;
+  let timeoutId;
   try {
-    const browser = await puppeteer.launch({
+    browser = await puppeteer.launch({
       headless: true,
       executablePath: CHROME_PATH,
       args: ['--no-sandbox', '--disable-setuid-sandbox']
@@ -29,35 +28,42 @@ const getAccessToken = async (sp_dc_value) => {
 
     let tokenCaptured = false;
 
-    page.on('requestfinished', async (request) => {
-      const url = request.url();
-      if (!tokenCaptured && url.startsWith(tokenApiPattern)) {
-        try {
-          const response = await request.response();
-          const data = await response.json();
-          const token = data?.accessToken;
-          if (token) {
-            accessTokens.push(token);
-            console.log(`✅ Captured token for`);
+    const tokenPromise = new Promise((resolve, reject) => {
+      page.on('requestfinished', async (request) => {
+        const url = request.url();
+        if (!tokenCaptured && url.startsWith(tokenApiPattern)) {
+          try {
+            const response = await request.response();
+            const data = await response.json();
+            const token = data?.accessToken;
+            if (token) {
+              accessTokens.push(token);
+              console.log(`✅ Captured token`);
+              tokenCaptured = true;
+              resolve();
+            }
+          } catch (e) {
+            reject(new Error(`❌ Error parsing token: ${e.message}`));
           }
-          tokenCaptured = true;
-          await browser.close();
-        } catch (e) {
-          console.error(`❌ Error parsing token`, e.message);
-          await browser.close();
         }
-      }
+      });
+
+      timeoutId = setTimeout(() => {
+        if (!tokenCaptured) {
+          console.warn('⚠️ Token not captured within timeout.');
+          resolve(); 
+        }
+      }, 15000); 
     });
 
     await page.goto('https://open.spotify.com', { waitUntil: 'networkidle2' });
-    await page.waitForTimeout(10000);
-    if (!tokenCaptured) {
-      console.warn(`⚠️ Timeout or token not found`);
-      await browser.close();
-    }
+    await tokenPromise;
 
   } catch (e) {
-    console.error(`❌ Error launching browser`, e.message);
+    console.error(`❌ Error launching or processing: ${e.message}`);
+  } finally {
+    clearTimeout(timeoutId);
+    if (browser) await browser.close();
   }
 };
 
