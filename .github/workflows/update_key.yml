@@ -1,9 +1,9 @@
 name: Update key
 
 on:
-  # schedule:
-  #   - cron: "*/30 * * * *"  
-  workflow_dispatch:
+  schedule:
+    - cron: "*/30 * * * *"  
+  # workflow_dispatch:
 
 permissions:
   contents: write
