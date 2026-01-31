@@ -1,3 +1,10 @@
+<div align="center">
+
+# ⚠️ Deprecated Repository  
+This repository is **deprecated** and is no longer maintained.
+
+</div>
+
 # 🎧 Spotify Access Token Provider
 
 This repository automatically provides refreshed **free Spotify access token**.  
